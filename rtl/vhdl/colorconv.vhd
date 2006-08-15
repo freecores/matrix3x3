@@ -62,7 +62,7 @@ signal d1, d2, d3			: SIGNED( (data_width+factors_width) downto 0 );
 
 signal y1w,y2w,y3w			: SIGNED( (data_width+factors_width) downto 0 );
 
-signal pipe_delay			: STD_LOGIC_VECTOR( 10 downto 0 );
+signal pipe_delay			: STD_LOGIC_VECTOR( 7 downto 0 );
 
 begin
 
@@ -181,11 +181,11 @@ begin
 		pipe_delay <= (others=>'0');
 	elsif rising_edge(clk) then
 		pipe_delay(0) <= DATA_ENA;
-		pipe_delay(8 downto 1) <= pipe_delay(7 downto 0);
+		pipe_delay(7 downto 1) <= pipe_delay(6 downto 0);
 	end if;
 end process;
 
-DOUT_RDY <= pipe_delay(8);
+DOUT_RDY <= pipe_delay(7);
 
 
 end a;
