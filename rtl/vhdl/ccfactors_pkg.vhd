@@ -28,7 +28,9 @@ package ccfactors_pkg is
 		YCbCr601_to_YCbCr709,
 		YUV601_to_YIQ601,
 		StudioRGB_to_YIQ601,
-		YIQ601_to_StudioRGB
+		YIQ601_to_StudioRGB,
+		ComputerRGB_to_YCgCo,
+		YCgCo_to_ComputerRGB
 	);
 	CONSTANT F_FACTORS_PART	 : INTEGER := 15; -- float part width, 10-E4 accuracy
 	CONSTANT INT_FACTORS_PART: INTEGER := 3;  -- integer part with, from -5 to +4 range (-4.999999 to 3.999999)
@@ -39,7 +41,7 @@ package ccfactors_pkg is
 	-- Matrix factors for the Computer RGB to Rec.601 (SD) YCbCr color convertion 
 	-----------------------------------------------------------------------------------
 	constant crgb2ycbcr601_a11 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000010000011011111"; --  0.256789
-	constant crgb2ycbcr601_a12 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000100000010000110"; --  0.504129
+  	constant crgb2ycbcr601_a12 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000100000010000110"; --  0.504129
 	constant crgb2ycbcr601_a13 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000110010001000"; --  0.0979
  	constant crgb2ycbcr601_a21 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111110110100000111"; -- -0.148223
 	constant crgb2ycbcr601_a22 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111101101011000001"; -- -0.290992
@@ -251,7 +253,7 @@ package ccfactors_pkg is
 	constant yuv601_yiq601_a11	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
 	constant yuv601_yiq601_a12	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
 	constant yuv601_yiq601_a13	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
-    constant yuv601_yiq601_a21	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+   constant yuv601_yiq601_a21	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
 	constant yuv601_yiq601_a22	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111011101001001001"; -- -0.544639
 	constant yuv601_yiq601_a23	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000110101101011010"; --  0.838671 
 	constant yuv601_yiq601_a31	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
@@ -307,6 +309,50 @@ package ccfactors_pkg is
 	constant yiq601_srgb_b1y	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
 	constant yiq601_srgb_b2y	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
 	constant yiq601_srgb_b3y	 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+
+   
+   -----------------------------------------------------------------------------------
+	-- Matrix factors for the Computer RGB to YCgCo convertion 
+	-----------------------------------------------------------------------------------
+   constant crgb2ycgco_a11 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000010000000000000"; --  0.25
+	constant crgb2ycgco_a12 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000100000000000000"; --  0.50
+	constant crgb2ycgco_a13 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000010000000000000"; --  0.25
+ 	constant crgb2ycgco_a21 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000100000000000000"; --  0.50
+	constant crgb2ycgco_a22 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+	constant crgb2ycgco_a23 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111100000000000000"; -- -0.50
+	constant crgb2ycgco_a31 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111110000000000000"; -- -0.25
+	constant crgb2ycgco_a32 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000100000000000000"; --  0.50
+	constant crgb2ycgco_a33 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111110000000000000"; -- -0.25
+
+	constant crgb2ycgco_b1x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+	constant crgb2ycgco_b2x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+	constant crgb2ycgco_b3x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+
+	constant crgb2ycgco_b1y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000010000000000000"; -- 16
+	constant crgb2ycgco_b2y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"010000000000000000"; -- 128
+	constant crgb2ycgco_b3y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"010000000000000000"; -- 128
+
+   -----------------------------------------------------------------------------------
+	-- Matrix factors for the YCgCo to Computer RGB convertion 
+	-----------------------------------------------------------------------------------
+   constant ycgco2crgb_a11 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
+	constant ycgco2crgb_a12 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
+	constant ycgco2crgb_a13 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111000000000000000"; -- -1
+ 	constant ycgco2crgb_a21 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
+	constant ycgco2crgb_a22 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; --  0
+	constant ycgco2crgb_a23 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
+	constant ycgco2crgb_a31 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"001000000000000000"; --  1
+	constant ycgco2crgb_a32 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111000000000000000"; -- -1 
+	constant ycgco2crgb_a33 : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111000000000000000"; -- -1
+
+	constant ycgco2crgb_b1x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"111110000000000000"; -- -16
+	constant ycgco2crgb_b2x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"110000000000000000"; -- -128
+	constant ycgco2crgb_b3x : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"110000000000000000"; -- -128
+
+	constant ycgco2crgb_b1y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; -- 0
+	constant ycgco2crgb_b2y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; -- 0
+	constant ycgco2crgb_b3y : SIGNED(FACTORS_WIDTH-1 DOWNTO 0) := b"000000000000000000"; -- 0
+
 
 end ccfactors_pkg;
 
