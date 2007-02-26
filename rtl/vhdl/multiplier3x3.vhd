@@ -1,13 +1,13 @@
 -- ***** BEGIN LICENSE BLOCK *****
 ----------------------------------------------------------------------
 ----                                                              ----
-----  True matrix 3x3 color convertion IP Core                    ----
+---- WISHBONE matrix 3x3 multiplier IP Core                       ----
 ----                                                              ----
 ---- This file is part of the matrix 3x3 multiplier project       ----
 ---- http://www.opencores.org/projects.cgi/web/matrix3x3/         ----
 ----                                                              ----
 ---- Description                                                  ----
----- True matrix 3x3 color converter							  ----
+---- Matrix 3x3 multiplier with WISHBONE interface				  ----
 ---- 		                                                      ----
 ---- To Do:                                                       ----
 ---- -                                                            ----
@@ -18,7 +18,7 @@
 ----                                                              ----
 ----------------------------------------------------------------------
 ----                                                              ----
----- Copyright (C) 2006 Authors and OPENCORES.ORG                 ----
+---- Copyright (C) 2007 Authors and OPENCORES.ORG                 ----
 ----                                                              ----
 ---- This source file may be used and distributed without         ----
 ---- restriction provided that this copyright statement is not    ----
@@ -39,23 +39,22 @@
 ----                                                              ----
 ---- You should have received a copy of the GNU Lesser General    ----
 ---- Public License along with this source; if not, download it   ----
----- from http://www.gnu.org/licenses/lgpl.txt or  write to the   ----
----- Free Software Foundation, Inc., 51 Franklin Street,          ----
----- Fifth Floor, Boston, MA  02110-1301  USA                     ----
+---- from http://www.gnu.org/licenses/lgpl.txt                     ----
 ----                                                              ----
 ----------------------------------------------------------------------
--- * ***** END LICENSE BLOCK ***** */
-
-
+-- * ***** END LICENSE BLOCK ***** */    
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 
-use work.ccfactors_pkg.all;
+entity  multiplier3x3 is 
+generic(
+        DATA_WIDTH	: INTEGER;
+        F_FACTORS_PART	: INTEGER;
+        INT_FACTORS_PART	: INTEGER
+        );
 
-entity colorconv is
-generic(DATA_WIDTH	: INTEGER);
 port	(
 	clk				:	IN STD_LOGIC;
 	rstn			:	IN STD_LOGIC;
@@ -69,13 +68,13 @@ port	(
 	x3				:	IN UNSIGNED( data_width-1 downto 0 );
 
 	-- matrix factors
-	a11,a12,a13		:	IN SIGNED( FACTORS_WIDTH-1 downto 0 );
-	a21,a22,a23		:	IN SIGNED( FACTORS_WIDTH-1 downto 0 );
-	a31,a32,a33		:	IN SIGNED( FACTORS_WIDTH-1 downto 0 );
+	a11,a12,a13		:	IN SIGNED( f_factors_part+int_factors_part-1 downto 0 );
+	a21,a22,a23		:	IN SIGNED( f_factors_part+int_factors_part-1 downto 0 );
+	a31,a32,a33		:	IN SIGNED( f_factors_part+int_factors_part-1 downto 0 );
 
 	--shift vectors
-	b1x,b2x,b3x		:	IN SIGNED( FACTORS_WIDTH-1 downto 0 );
-	b1y,b2y,b3y		:	IN SIGNED( FACTORS_WIDTH-1 downto 0 );
+	b1x,b2x,b3x		:	IN SIGNED( f_factors_part+int_factors_part-1 downto 0 );
+	b1y,b2y,b3y		:	IN SIGNED( f_factors_part+int_factors_part-1 downto 0 );
 
 	-- output vector
 	y1c				:	OUT SIGNED( int_factors_part-1 downto 0 );
@@ -85,10 +84,11 @@ port	(
 	y2				:	OUT UNSIGNED( data_width-1 downto 0 );
 	y3				:	OUT UNSIGNED( data_width-1 downto 0 )
 );
-end colorconv;
+end multiplier3x3;
 
-architecture a of colorconv is
+architecture a of multiplier3x3 is
 
+constant factors_width	: integer := (f_factors_part + int_factors_part); -- one sign bit
 -- the result full width will be
 signal m11, m12, m13		: SIGNED( (data_width+factors_width) downto 0 );
 signal m21, m22, m23		: SIGNED( (data_width+factors_width) downto 0 );

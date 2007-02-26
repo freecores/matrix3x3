@@ -9,10 +9,9 @@
 vlib work
 
 # Compile
-vcom -93 -work work ..\\..\\rtl\\vhdl\\ccfactors_pkg.vhd
-vcom -93 -work work ..\\..\\rtl\\vhdl\\colorconv.vhd
+vcom -93 -work work ..\\..\\rtl\\vhdl\\multiplier3x3.vhd
 
-vcom -93 -work work ..\\..\\bench\\vhdl\\colorconv_tb.vhd
+vcom -93 -work work ..\\..\\bench\\vhdl\\multiplier3x3_tb.vhd
 
 #sim
 vsim -t ps tb

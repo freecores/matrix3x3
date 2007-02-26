@@ -1,13 +1,13 @@
 -- ***** BEGIN LICENSE BLOCK *****
 ----------------------------------------------------------------------
 ----                                                              ----
-----  True matrix 3x3 color convertion IP Core                    ----
+---- WISHBONE matrix 3x3 multiplier IP Core                       ----
 ----                                                              ----
 ---- This file is part of the matrix 3x3 multiplier project       ----
 ---- http://www.opencores.org/projects.cgi/web/matrix3x3/         ----
 ----                                                              ----
 ---- Description                                                  ----
----- True matrix 3x3 color converter							  ----
+---- Matrix 3x3 multiplier with WISHBONE interface				  ----
 ---- 		                                                      ----
 ---- To Do:                                                       ----
 ---- -                                                            ----
@@ -18,7 +18,7 @@
 ----                                                              ----
 ----------------------------------------------------------------------
 ----                                                              ----
----- Copyright (C) 2006 Authors and OPENCORES.ORG                 ----
+---- Copyright (C) 2007 Authors and OPENCORES.ORG                 ----
 ----                                                              ----
 ---- This source file may be used and distributed without         ----
 ---- restriction provided that this copyright statement is not    ----
@@ -44,77 +44,78 @@
 ---- Fifth Floor, Boston, MA  02110-1301  USA                     ----
 ----                                                              ----
 ----------------------------------------------------------------------
--- * ***** END LICENSE BLOCK ***** */
-
+-- * ***** END LICENSE BLOCK ***** */    
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.std_logic_arith.all;
 
-use work.ccfactors_pkg.all;
-
-entity colorconv_wb is
-generic( DATA_WIDTH	 : INTEGER:=16);
+entity multiplier3x3_wb is
+generic( DATA_WIDTH	     : INTEGER:=16;
+         F_FACTORS_PART	 : INTEGER:= 15;
+         INT_FACTORS_PART: INTEGER:= 3
+        );
 port	(
 	-- Data Bus (piped stream, our own bus) - x input and y output
-	x_clk			   	: 	IN STD_LOGIC;
-	x_rstn			   	: 	IN STD_LOGIC;
+	x_clk			   	: IN STD_LOGIC;
+	x_rstn			   	: IN STD_LOGIC;
 
-	x_we_i	  			: 	IN STD_LOGIC;
-	y_rdy_o	   			: 	OUT STD_LOGIC;	
+	x_we_i	  			: IN STD_LOGIC;
+	y_rdy_o	   			: OUT STD_LOGIC;	
 
 	-- input vector
-	x1_i			    : 	IN UNSIGNED( data_width-1 downto 0 );
-	x2_i			    : 	IN UNSIGNED( data_width-1 downto 0 );
-	x3_i			    : 	IN UNSIGNED( data_width-1 downto 0 );
+	x1_i			    : IN UNSIGNED( data_width-1 downto 0 );
+	x2_i			    : IN UNSIGNED( data_width-1 downto 0 );
+	x3_i			    : IN UNSIGNED( data_width-1 downto 0 );
 	
 	-- output vector
-	y1c_o			    : 	OUT SIGNED( int_factors_part-1 downto 0 );
-	y2c_o			    : 	OUT SIGNED( int_factors_part-1 downto 0 );
-	y3c_o	     		: 	OUT SIGNED( int_factors_part-1 downto 0 );
+	y1c_o			    : OUT SIGNED( int_factors_part-1 downto 0 );
+	y2c_o			    : OUT SIGNED( int_factors_part-1 downto 0 );
+	y3c_o	     		: OUT SIGNED( int_factors_part-1 downto 0 );
 
-	y1_o		        : 	OUT UNSIGNED( data_width-1 downto 0 );
-	y2_o	    	    : 	OUT UNSIGNED( data_width-1 downto 0 );
-	y3_o	      	    : 	OUT UNSIGNED( data_width-1 downto 0 );
+	y1_o		        : OUT UNSIGNED( data_width-1 downto 0 );
+	y2_o	    	    : OUT UNSIGNED( data_width-1 downto 0 );
+	y3_o	      	    : OUT UNSIGNED( data_width-1 downto 0 );
 
 	-- Control Bus (WishBone Bus slave) - set factors and shifts regs for mult3x3
-	wb_clk_i			: 	IN STD_LOGIC;
-	wb_rst_i			: 	IN STD_LOGIC;
-	wb_stb_i			: 	IN STD_LOGIC;
-	wb_we_i				: 	IN STD_LOGIC;
-	
-	-- data bus
+	wb_clk_i			: IN STD_LOGIC;
+	wb_rst_i			: IN STD_LOGIC;
+	wb_stb_i			: IN STD_LOGIC;
+	wb_we_i				: IN STD_LOGIC;
 	wb_adr_i			: IN  STD_LOGIC_VECTOR (3 downto 0);
 	wb_dat_i			: IN  STD_LOGIC_VECTOR (f_factors_part+int_factors_part-1 downto 0);
 	wb_dat_o			: OUT STD_LOGIC_VECTOR (f_factors_part+int_factors_part-1 downto 0)
 );
-end colorconv_wb;
+end multiplier3x3_wb;
 
-architecture a of colorconv_wb is
+architecture a of multiplier3x3_wb is
 
 constant	factors_width	: integer := (f_factors_part + int_factors_part); -- one sign bit
---factors for rgb2ycbcr conversion
-SIGNAL    a11		:	signed(factors_width-1 downto 0); 
-SIGNAL    a12		:	signed(factors_width-1 downto 0); 
-SIGNAL    a13		:	signed(factors_width-1 downto 0); 
-SIGNAL    a21		:	signed(factors_width-1 downto 0); 
-SIGNAL    a22		:	signed(factors_width-1 downto 0); 
-SIGNAL    a23		:	signed(factors_width-1 downto 0); 
-SIGNAL    a31		:	signed(factors_width-1 downto 0); 
-SIGNAL    a32		:	signed(factors_width-1 downto 0); 
-SIGNAL    a33		:	signed(factors_width-1 downto 0); 
+--matrix factors 
+SIGNAL  a11			:	signed(factors_width-1 downto 0); 
+SIGNAL  a12			:	signed(factors_width-1 downto 0); 
+SIGNAL  a13			:	signed(factors_width-1 downto 0); 
+SIGNAL  a21			:	signed(factors_width-1 downto 0); 
+SIGNAL  a22			:	signed(factors_width-1 downto 0); 
+SIGNAL  a23			:	signed(factors_width-1 downto 0); 
+SIGNAL  a31			:	signed(factors_width-1 downto 0); 
+SIGNAL  a32			:	signed(factors_width-1 downto 0); 
+SIGNAL  a33			:	signed(factors_width-1 downto 0); 
 
---shift vectors for rgb2ycbcr conversion
-SIGNAL	b1x		:	signed(factors_width-1 downto 0);
-SIGNAL	b2x		:	signed(factors_width-1 downto 0);
-SIGNAL	b3x		:	signed(factors_width-1 downto 0);
-SIGNAL	b1y		:	signed(factors_width-1 downto 0);
-SIGNAL	b2y		:	signed(factors_width-1 downto 0);
-SIGNAL	b3y		:	signed(factors_width-1 downto 0);
+--shift vectors
+SIGNAL	b1x			:	signed(factors_width-1 downto 0);
+SIGNAL	b2x			:	signed(factors_width-1 downto 0);
+SIGNAL	b3x			:	signed(factors_width-1 downto 0);
+SIGNAL	b1y			:	signed(factors_width-1 downto 0);
+SIGNAL	b2y			:	signed(factors_width-1 downto 0);
+SIGNAL	b3y			:	signed(factors_width-1 downto 0);
 
-COMPONENT colorconv
+COMPONENT multiplier3x3
 
-generic( DATA_WIDTH	 : INTEGER := 8);
+generic( DATA_WIDTH	     : INTEGER:=8;
+         F_FACTORS_PART	 : INTEGER:= 15;
+         INT_FACTORS_PART: INTEGER:= 3
+        );
 port	(
 	clk			   : 	IN STD_LOGIC;
 	rstn		   : 	IN STD_LOGIC;
@@ -247,8 +248,12 @@ begin
 		end if;
 	end process;
 
-	converter:colorconv
-	GENERIC MAP( DATA_WIDTH)
+	mult:multiplier3x3
+	GENERIC MAP(
+                 DATA_WIDTH,
+                 F_FACTORS_PART,
+                 INT_FACTORS_PART
+              )
 	PORT MAP (x_clk, x_rstn, x_we_i, y_rdy_o,
 				x1_i, x2_i, x3_i,
 				a11, a12, a13,
